@@ -1,0 +1,483 @@
+import React, { useState } from 'react';
+import { MapPin, Calendar, Star, Plus, Heart, Share2, Search, User, Home } from 'lucide-react';
+
+const MorondavaTourismApp = () => {
+  const [currentView, setCurrentView] = useState('home');
+  const [offers, setOffers] = useState([
+    {
+      id: 1,
+      title: "Dîner romantique sur la plage",
+      description: "Savourez un repas aux chandelles face au coucher de soleil sur les baobabs",
+      business: "Restaurant Chez Maggie",
+      category: "restaurant",
+      price: "25000 Ar",
+      originalPrice: "35000 Ar",
+      discount: "30%",
+      location: "Avenue des Baobabs",
+      validUntil: "2024-08-15",
+      image: "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop",
+      rating: 4.8,
+      reviews: 156
+    },
+    {
+      id: 2,
+      title: "Nuit gratuite pour 3 nuits",
+      description: "Réservez 3 nuits et la 4ème vous est offerte dans notre lodge",
+      business: "Baobab Lodge",
+      category: "accommodation",
+      price: "120000 Ar",
+      originalPrice: "160000 Ar",
+      discount: "25%",
+      location: "Kirindy Forest",
+      validUntil: "2024-09-30",
+      image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop",
+      rating: 4.9,
+      reviews: 89
+    },
+    {
+      id: 3,
+      title: "Excursion Tsingy - Groupe",
+      description: "Tarif de groupe pour découvrir les Tsingy de Bemaraha",
+      business: "Morondava Adventures",
+      category: "activity",
+      price: "180000 Ar",
+      originalPrice: "250000 Ar",
+      discount: "28%",
+      location: "Tsingy de Bemaraha",
+      validUntil: "2024-08-31",
+      image: "https://images.unsplash.com/photo-1596370743073-6b9c8d1e8d1e?w=400&h=300&fit=crop",
+      rating: 4.7,
+      reviews: 203
+    }
+  ]);
+  
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [favorites, setFavorites] = useState([]);
+  const [userType, setUserType] = useState('tourist');
+  const [newOffer, setNewOffer] = useState({
+    title: '',
+    description: '',
+    business: '',
+    category: 'restaurant',
+    price: '',
+    originalPrice: '',
+    location: '',
+    validUntil: '',
+    image: ''
+  });
+
+  const categories = [
+    { id: 'all', name: 'Tout', icon: '🏝️' },
+    { id: 'restaurant', name: 'Restaurants', icon: '🍽️' },
+    { id: 'accommodation', name: 'Hébergements', icon: '🏨' },
+    { id: 'activity', name: 'Activités', icon: '🎯' },
+    { id: 'transport', name: 'Transport', icon: '🚗' },
+    { id: 'shopping', name: 'Shopping', icon: '🛍️' }
+  ];
+
+  const filteredOffers = offers.filter(offer => {
+    const matchesCategory = selectedCategory === 'all' || offer.category === selectedCategory;
+    const matchesSearch = offer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         offer.business.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const toggleFavorite = (offerId) => {
+    setFavorites(prev => 
+      prev.includes(offerId) 
+        ? prev.filter(id => id !== offerId)
+        : [...prev, offerId]
+    );
+  };
+
+  const addOffer = () => {
+    if (!newOffer.title || !newOffer.description || !newOffer.business || !newOffer.price || !newOffer.originalPrice || !newOffer.location || !newOffer.validUntil) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    const offer = {
+      ...newOffer,
+      id: Date.now(),
+      rating: 0,
+      reviews: 0,
+      discount: Math.round(((newOffer.originalPrice - newOffer.price) / newOffer.originalPrice) * 100) + '%'
+    };
+    
+    setOffers([offer, ...offers]);
+    setNewOffer({
+      title: '',
+      description: '',
+      business: '',
+      category: 'restaurant',
+      price: '',
+      originalPrice: '',
+      location: '',
+      validUntil: '',
+      image: ''
+    });
+    setCurrentView('home');
+  };
+
+  const OfferCard = ({ offer }) => (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4">
+      <div className="relative">
+        <img src={offer.image} alt={offer.title} className="w-full h-48 object-cover" />
+        <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold">
+          -{offer.discount}
+        </div>
+        <button
+          onClick={() => toggleFavorite(offer.id)}
+          className="absolute top-3 left-3 p-2 bg-white rounded-full shadow-md"
+        >
+          <Heart className={`w-5 h-5 ${favorites.includes(offer.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+        </button>
+      </div>
+      
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xl">{categories.find(c => c.id === offer.category)?.icon}</span>
+          <span className="text-sm text-gray-500">{offer.business}</span>
+        </div>
+        
+        <h3 className="text-lg font-bold text-gray-800 mb-2">{offer.title}</h3>
+        <p className="text-gray-600 mb-3 text-sm">{offer.description}</p>
+        
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-600">{offer.location}</span>
+        </div>
+        
+        {offer.rating > 0 && (
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+            <span className="text-sm">{offer.rating} ({offer.reviews} avis)</span>
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-orange-500">{offer.price}</span>
+            <span className="text-sm text-gray-500 line-through">{offer.originalPrice}</span>
+          </div>
+          <button className="px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">
+            Détails
+          </button>
+        </div>
+        
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Calendar className="w-4 h-4" />
+          <span>Jusqu'au {new Date(offer.validUntil).toLocaleDateString('fr-FR')}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (currentView === 'add') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-6 text-center">Nouvelle Offre</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Titre de l'offre *
+                </label>
+                <input
+                  type="text"
+                  value={newOffer.title}
+                  onChange={(e) => setNewOffer({...newOffer, title: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Ex: Dîner romantique sur la plage"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description *
+                </label>
+                <textarea
+                  value={newOffer.description}
+                  onChange={(e) => setNewOffer({...newOffer, description: e.target.value})}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Décrivez votre offre..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Entreprise *
+                  </label>
+                  <input
+                    type="text"
+                    value={newOffer.business}
+                    onChange={(e) => setNewOffer({...newOffer, business: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Nom de votre établissement"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Catégorie
+                  </label>
+                  <select
+                    value={newOffer.category}
+                    onChange={(e) => setNewOffer({...newOffer, category: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    {categories.slice(1).map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Prix promo (Ar) *
+                  </label>
+                  <input
+                    type="number"
+                    value={newOffer.price}
+                    onChange={(e) => setNewOffer({...newOffer, price: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="25000"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Prix original (Ar) *
+                  </label>
+                  <input
+                    type="number"
+                    value={newOffer.originalPrice}
+                    onChange={(e) => setNewOffer({...newOffer, originalPrice: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="35000"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Lieu *
+                  </label>
+                  <input
+                    type="text"
+                    value={newOffer.location}
+                    onChange={(e) => setNewOffer({...newOffer, location: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Avenue des Baobabs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Valable jusqu'au *
+                  </label>
+                  <input
+                    type="date"
+                    value={newOffer.validUntil}
+                    onChange={(e) => setNewOffer({...newOffer, validUntil: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  URL de l'image
+                </label>
+                <input
+                  type="url"
+                  value={newOffer.image}
+                  onChange={(e) => setNewOffer({...newOffer, image: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={() => setCurrentView('home')}
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={addOffer}
+                  className="flex-1 py-2 px-4 bg-orange-500 text-white rounded-md font-medium hover:bg-orange-600"
+                >
+                  Publier
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'favorites') {
+    const favoriteOffers = offers.filter(offer => favorites.includes(offer.id));
+    
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">❤️ Mes Favoris</h1>
+            <p className="text-gray-600">Vos offres préférées</p>
+          </div>
+
+          {favoriteOffers.length > 0 ? (
+            favoriteOffers.map(offer => <OfferCard key={offer.id} offer={offer} />)
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">💔</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucun favori</h3>
+              <p className="text-gray-500">Cliquez sur le cœur pour ajouter des favoris</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
+          <div className="flex justify-around items-center max-w-md mx-auto">
+            <button onClick={() => setCurrentView('home')} className="flex flex-col items-center gap-1 p-2 text-gray-600">
+              <Home className="w-5 h-5" />
+              <span className="text-xs">Accueil</span>
+            </button>
+            {userType === 'business' && (
+              <button onClick={() => setCurrentView('add')} className="flex flex-col items-center gap-1 p-2 text-gray-600">
+                <Plus className="w-5 h-5" />
+                <span className="text-xs">Ajouter</span>
+              </button>
+            )}
+            <button onClick={() => setCurrentView('favorites')} className="flex flex-col items-center gap-1 p-2 text-orange-500">
+              <Heart className="w-5 h-5" />
+              <span className="text-xs">Favoris</span>
+            </button>
+            <button className="flex flex-col items-center gap-1 p-2 text-gray-600">
+              <User className="w-5 h-5" />
+              <span className="text-xs">Profil</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vue principale (home)
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Toggle utilisateur */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="bg-white rounded-lg shadow-md p-2">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setUserType('tourist')}
+              className={`px-3 py-1 rounded text-sm ${userType === 'tourist' ? 'bg-blue-500 text-white' : 'text-gray-600'}`}
+            >
+              👤 Touriste
+            </button>
+            <button
+              onClick={() => setUserType('business')}
+              className={`px-3 py-1 rounded text-sm ${userType === 'business' ? 'bg-orange-500 text-white' : 'text-gray-600'}`}
+            >
+              🏢 Business
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto p-4 pt-16">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">🏝️ Morondava Tourism</h1>
+          <p className="text-gray-600">Offres promotionnelles du moment</p>
+        </div>
+
+        {/* Recherche */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher une offre..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Catégories */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {categories.map(category => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-full whitespace-nowrap text-sm ${
+                selectedCategory === category.id
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              <span>{category.icon}</span>
+              <span>{category.name}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Offres */}
+        {filteredOffers.length > 0 ? (
+          filteredOffers.map(offer => <OfferCard key={offer.id} offer={offer} />)
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-4xl mb-4">🏝️</div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucune offre trouvée</h3>
+            <p className="text-gray-500">Modifiez vos filtres ou votre recherche</p>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
+        <div className="flex justify-around items-center max-w-md mx-auto">
+          <button onClick={() => setCurrentView('home')} className="flex flex-col items-center gap-1 p-2 text-orange-500">
+            <Home className="w-5 h-5" />
+            <span className="text-xs">Accueil</span>
+          </button>
+          {userType === 'business' && (
+            <button onClick={() => setCurrentView('add')} className="flex flex-col items-center gap-1 p-2 text-gray-600">
+              <Plus className="w-5 h-5" />
+              <span className="text-xs">Ajouter</span>
+            </button>
+          )}
+          <button onClick={() => setCurrentView('favorites')} className="flex flex-col items-center gap-1 p-2 text-gray-600 relative">
+            <Heart className="w-5 h-5" />
+            <span className="text-xs">Favoris</span>
+            {favorites.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                {favorites.length}
+              </span>
+            )}
+          </button>
+          <button className="flex flex-col items-center gap-1 p-2 text-gray-600">
+            <User className="w-5 h-5" />
+            <span className="text-xs">Profil</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MorondavaTourismApp;
